@@ -1,0 +1,4 @@
+helper/
+__pycache__/
+test*   # Ignore files with 'test' in the name
+*.txt
