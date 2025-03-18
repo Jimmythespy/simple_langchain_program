@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f4f4f9;
+            margin: 0;
+        }
+
+        .upload-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 450px;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .upload-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .file-upload {
+            border: 3px dashed #0056b3;
+            padding: 40px;
+            border-radius: 8px;
+            color: #0056b3;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload .file-name {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #0056b3;
+            display: none;
+        }
+
+        .file-upload p {
+            margin: 0;
+            color: #0056b3;
+            font-size: 16px;
+        }
+
+        .submit-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:active {
+            background-color: #0056b3;
+        }
+
+        .upload-container p {
+            font-size: 14px;
+            color: #777;
+            margin-top: 10px;
+        }
+
+        .floating-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            font-size: 16px;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .floating-button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #file-list {
+            position: fixed;
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+            width: 250px;
+            padding:20px;
+            background-color: #ffffff;
+            color: rgb(0, 0, 0);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    
+    <button class="floating-button" onclick="query_Redirect()"><i class="fa fa-search" aria-hidden="true"></i></button>
+    <div class="upload-container">
+        <h2>Upload Your File</h2>
+        <form id="uploadForm">
+            <div class="file-upload">
+                <label for="fileInput">
+                    <p>Click to Select a File</p>
+                    <input type="file" id="fileInput" name="file" required />
+                </label>
+                <div class="file-name" id="fileName"></div>
+            </div>
+            <button type="submit" class="submit-btn">Upload</button>
+        </form>
+    </div>
+
+    <div id="file-list">
+        <p>File list:</p>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+
+        fileList = []
+
+        fetch("http://127.0.0.1:8000/listfile")
+        .then(response => response.json())
+        .then(json => {
+            console.log(json.file_list)
+            fileList = json.file_list
+            renderList()
+        })
+
+
+        function renderList() {
+            var result = "";
+            fileList.forEach(function (item) {
+                result += "<li>" + item + " " + "</li>";
+            });
+
+            console.log(result)
+
+            document.getElementById("file-list").innerHTML += result;
+        }
+
+
+        // Display file name when file is selected
+        fileInput.addEventListener('change', (event) => {
+            const selectedFile = event.target.files[0];
+            if (selectedFile) {
+                fileName.style.display = 'block';
+                fileName.textContent = selectedFile.name;
+            } else {
+                fileName.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const file = fileInput.files[0];  // Get the file from the input
+
+            if (!file) {
+                alert('Please select a file!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);  // Append file to form data
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/uploadfile/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed!');
+                }
+
+                const result = await response.json();
+                console.log(result)
+                alert('File uploaded successfully: ' + result.filename);
+                window.location.replace("http://127.0.0.1:8000/query_ui");
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error uploading file!');
+            }
+        });
+
+        function query_Redirect() {
+                window.location.href = "http://127.0.0.1:8000/query_ui";
+        }
+    </script>
+
+</body>
+</html>
