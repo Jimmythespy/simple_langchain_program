@@ -1,1 +1,1 @@
-# simple_langchain_program
+# Simple Langchain & FastAPI program
